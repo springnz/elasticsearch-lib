@@ -10,9 +10,10 @@ import scala.concurrent.duration._
 class ESServerTest extends fixture.WordSpec with ShouldMatchers {
 
   type FixtureParam = ESServer
+  val port  = "9250"
 
   def withFixture(test: OneArgTest) = {
-    val server = new ESServer("test-cluster")
+    val server = new ESServer("test-cluster", port)
 
     try {
       withFixture(test.toNoArgTest(server)) // "loan" the fixture to the test
@@ -26,7 +27,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
     "start up a test instance with health green" in { server ⇒
       server.start()
 
-      val client = new Client("http://127.0.0.1:9200")
+      val client = new Client(s"http://127.0.0.1:$port")
       val healthFuture: Future[Response] = client.health()
       val health = Await.result(healthFuture, 10 seconds)
 
@@ -39,7 +40,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
     "add a test index" in { server ⇒
       server.start()
 
-      val client = new Client("http://127.0.0.1:9200")
+      val client = new Client(s"http://127.0.0.1:$port")
       val indexFuture: Future[Response] = client.createIndex("testindex")
 
       val index = Await.result(indexFuture, 10 seconds)
