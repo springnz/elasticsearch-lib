@@ -9,7 +9,6 @@ resolvers ++= Seq(
   Resolver.mavenLocal,
   "Java.net Maven2 Repository" at "http://download.java.net/maven/2/",
   Resolver.bintrayRepo("pathikrit", "maven"),
-  Resolver.bintrayRepo("pathikrit", "maven"),
   "gphat" at "https://raw.github.com/gphat/mvn-repo/master/releases/"
 )
 
