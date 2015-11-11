@@ -45,17 +45,6 @@ class ESServer(clusterName: String, httpPort: String = "9200") extends Logging {
       FileUtils.forceDelete(dataDir)
     }
   }
-
-  def deleteIndex(index: String): Try[Unit] = Try {
-    log.info(s"Deleting index '$index'")
-    client.admin.indices.prepareDelete(index).execute().actionGet()
-  }
-
-  def createAndWaitForIndex(index: String): Try[Unit] = Try {
-    log.info(s"Creating index '$index'")
-    client.admin.indices.prepareCreate(index).execute.actionGet()
-    client.admin.cluster.prepareHealth(index).setWaitForActiveShards(1).execute.actionGet()
-  }
 }
 
 
