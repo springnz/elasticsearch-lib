@@ -9,10 +9,10 @@ import scala.concurrent.duration._
 
 class ESServerTest extends fixture.WordSpec with ShouldMatchers {
 
-  type FixtureParam = ESServer
+  override type FixtureParam = ESServer
   val port  = "9250"
 
-  def withFixture(test: OneArgTest) = {
+  override def withFixture(test: OneArgTest) = {
     val server = new ESServer("test-cluster", port)
 
     try {
