@@ -1,4 +1,4 @@
-package springnz.elasticsearch
+package springnz.elasticsearch.server
 
 import java.nio.file.Files
 
@@ -11,20 +11,29 @@ import springnz.util.Logging
 import scala.util.Try
 
 // adapted from https://orrsella.com/2014/10/28/embedded-elasticsearch-server-for-scala-integration-tests/
-class ESServer(clusterName: String, httpPort: String = "9200") extends Logging {
+class ESServer(clusterName: String, httpPort: Option[Int] = Some(9200)) extends Logging {
 
   //  private val clusterName = "neon-search"
   private val dataDirPath = Files.createTempDirectory(s"data-$clusterName-")
   private val dataDir = dataDirPath.toFile
 
   log.info(s"Logging ESServer for cluster '$clusterName' to '$dataDir'")
-  private val settings = Settings.settingsBuilder
-    .put("path.home", "/usr/local/elasticsearch-2.0.0/bin")
-    .put("path.data", dataDir.toString)
-    .put("http.enabled", "true")
-    .put("http.port", httpPort)
-    .put("cluster.name", clusterName)
-    .build
+
+  private val settings = {
+    val _settings = Settings.settingsBuilder
+      .put("path.home", "/usr/local/elasticsearch-2.0.0/bin")
+      .put("path.data", dataDir.toString)
+      .put("cluster.name", clusterName)
+
+    httpPort match {
+      case Some(port) ⇒
+        _settings.put("http.enabled", "true").put("http.port", httpPort)
+      case None ⇒
+        _settings.put("http.enabled", "false")
+    }
+
+    _settings.build()
+  }
 
   private lazy val node = nodeBuilder().local(false).settings(settings).build
 
@@ -46,5 +55,4 @@ class ESServer(clusterName: String, httpPort: String = "9200") extends Logging {
     }
   }
 }
-
 
