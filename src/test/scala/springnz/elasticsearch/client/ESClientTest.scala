@@ -4,7 +4,7 @@ import org.elasticsearch.action.index.{ IndexAction, IndexRequestBuilder }
 import org.elasticsearch.action.search.{ SearchAction, SearchRequestBuilder }
 import org.elasticsearch.index.query.QueryBuilders
 import org.scalatest.{ ShouldMatchers, WordSpec }
-import springnz.elasticsearch.server.ESServer
+import springnz.elasticsearch.server.{ESServerParams, ESServer}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -15,7 +15,7 @@ class ESClientTest extends WordSpec with ShouldMatchers {
 
     import ESClient._
 
-    val server = new ESServer("elasticsearch", None)
+    val server = new ESServer("elasticsearch", ESServerParams(httpPort = None))
     server.start()
 
     val client = transport(ESClientURI("localhost", 9300))

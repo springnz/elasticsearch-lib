@@ -11,7 +11,9 @@ import springnz.util.Logging
 import scala.util.Try
 
 // adapted from https://orrsella.com/2014/10/28/embedded-elasticsearch-server-for-scala-integration-tests/
-class ESServer(clusterName: String, httpPort: Option[Int] = Some(9200)) extends Logging {
+case class ESServerParams(httpPort: Option[Int] = Some(9200), extraConfig: Map[String, String] = Map.empty)
+
+class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParams()) extends Logging {
 
   //  private val clusterName = "neon-search"
   private val dataDirPath = Files.createTempDirectory(s"data-$clusterName-")
@@ -25,11 +27,16 @@ class ESServer(clusterName: String, httpPort: Option[Int] = Some(9200)) extends 
       .put("path.data", dataDir.toString)
       .put("cluster.name", clusterName)
 
-    httpPort match {
+    serverParams.httpPort match {
       case Some(port) ⇒
         _settings.put("http.enabled", "true").put("http.port", port)
       case None ⇒
         _settings.put("http.enabled", "false")
+    }
+
+    for ((key,value) <- serverParams.extraConfig) {
+      if (key.nonEmpty && value.nonEmpty)
+        _settings.put(key, value)
     }
 
     _settings.build()
