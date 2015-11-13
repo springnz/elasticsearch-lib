@@ -1,19 +1,20 @@
-package springnz.elasticsearch
+package springnz.elasticsearch.server
 
 import com.ning.http.client.Response
 import dispatch.Future
 import org.scalatest._
 import wabisabi._
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class ESServerTest extends fixture.WordSpec with ShouldMatchers {
 
   override type FixtureParam = ESServer
-  val port  = "9250"
+  val port = 9250
 
   override def withFixture(test: OneArgTest) = {
-    val server = new ESServer("test-cluster", port)
+    val server = new ESServer("test-cluster", Some(port))
 
     try {
       withFixture(test.toNoArgTest(server)) // "loan" the fixture to the test
