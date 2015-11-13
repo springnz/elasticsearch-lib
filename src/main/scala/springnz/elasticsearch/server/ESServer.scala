@@ -27,7 +27,7 @@ class ESServer(clusterName: String, httpPort: Option[Int] = Some(9200)) extends 
 
     httpPort match {
       case Some(port) ⇒
-        _settings.put("http.enabled", "true").put("http.port", httpPort)
+        _settings.put("http.enabled", "true").put("http.port", port)
       case None ⇒
         _settings.put("http.enabled", "false")
     }
