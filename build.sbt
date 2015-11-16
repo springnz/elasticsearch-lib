@@ -2,6 +2,7 @@
 name := "elasticsearch-lib"
 organization := "springnz"
 scalaVersion := "2.11.7"
+
 releaseVersionBump := sbtrelease.Version.Bump.Bugfix
 
 // Resolvers
