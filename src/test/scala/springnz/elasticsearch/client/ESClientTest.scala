@@ -16,10 +16,11 @@ import scala.concurrent.duration._
 class ESClientTest extends fixture.WordSpec with ShouldMatchers {
 
   override type FixtureParam = ESServer
+
+  // TODO: create a working example of Snapshotting an index
   private val snapshotDirPath: Path = Files.createTempDirectory(s"snapshot-")
 
   override def withFixture(test: OneArgTest) = {
- //   val server = new ESServer("elasticsearch", ESServerParams(httpPort = None, Map("path.repo" -> s"${snapshotDirPath.toString}")))
     val server = new ESServer("elasticsearch", ESServerParams(httpPort = None, repos = Seq(snapshotDirPath.toString)))
 
     try {
@@ -73,24 +74,6 @@ class ESClientTest extends fixture.WordSpec with ShouldMatchers {
       println(s"searchResponse = $searchResponse")
 
       searchResponse.getHits.getTotalHits shouldBe 1
-    }
-
-    "create a snapshot" ignore { server ⇒
-      val client = transport(ESClientURI("localhost", 9300))
-      val indexRequest: IndexRequest = createIndexRequest(client)
-      Await.result(client.execute(indexRequest), 5 seconds)
-//
-//
-//
-//      val snapshotRequest = new CreateSnapshotRequestBuilder(client, CreateSnapshotAction.INSTANCE)
-//        .setIndices(indexName)
-//        .setRepository(snapshotDirPath.toString)
-//        .setSnapshot("testbackup")
-//        .request()
-//
-//      val snapshotResponse = Await.result(client.execute(snapshotRequest), 5 seconds)
-//      println(s"snapshotResponse = $snapshotResponse")
-//
     }
   }
 
