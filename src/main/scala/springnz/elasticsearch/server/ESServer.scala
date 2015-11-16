@@ -1,5 +1,6 @@
 package springnz.elasticsearch.server
 
+import java.io.File
 import java.nio.file.Files
 
 import org.apache.commons.io.FileUtils
@@ -11,13 +12,13 @@ import springnz.util.Logging
 import scala.util.Try
 
 // adapted from https://orrsella.com/2014/10/28/embedded-elasticsearch-server-for-scala-integration-tests/
-case class ESServerParams(httpPort: Option[Int] = Some(9200), extraConfig: Map[String, String] = Map.empty)
+case class ESServerParams(httpPort: Option[Int] = Some(9200), repos: Seq[String] = Seq.empty[String], extraConfig: Map[String, String] = Map.empty)
 
 class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParams()) extends Logging {
 
   //  private val clusterName = "neon-search"
   private val dataDirPath = Files.createTempDirectory(s"data-$clusterName-")
-  private val dataDir = dataDirPath.toFile
+  private val dataDir: File = dataDirPath.toFile
 
   log.info(s"Logging ESServer for cluster '$clusterName' to '$dataDir'")
 
@@ -26,6 +27,7 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
       .put("path.home", "/usr/local/elasticsearch-2.0.0/bin")
       .put("path.data", dataDir.toString)
       .put("cluster.name", clusterName)
+      .putArray("path.repo", serverParams.repos: _*)
 
     serverParams.httpPort match {
       case Some(port) ⇒
