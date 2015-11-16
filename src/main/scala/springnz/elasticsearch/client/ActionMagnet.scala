@@ -4,6 +4,7 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthAction
 import org.elasticsearch.action.admin.cluster.node.hotthreads.NodesHotThreadsAction
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoAction
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsAction
+import org.elasticsearch.action.admin.cluster.repositories.put.PutRepositoryAction
 import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteAction
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsAction
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotAction
@@ -129,6 +130,8 @@ object ActionMagnet {
   implicit val getSettingsAction = magnet(GetSettingsAction.INSTANCE)
   implicit val updateSettingsAction = magnet(UpdateSettingsAction.INSTANCE)
   implicit val validateQueryAction = magnet(ValidateQueryAction.INSTANCE)
+
+  implicit val putRepositoryAction = magnet(PutRepositoryAction.INSTANCE)
 
   private def magnet[Request <: ActionRequest[Request], Response <: ActionResponse, RequestBuilder <: ActionRequestBuilder[Request, Response, RequestBuilder]](
     action: Action[Request, Response, RequestBuilder]) =

@@ -14,13 +14,12 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
   val port = 9250
 
   override def withFixture(test: OneArgTest) = {
-    val server = new ESServer("test-cluster", Some(port))
+    val server = new ESServer("test-cluster", ESServerParams(httpPort = Some(port)))
 
     try {
       withFixture(test.toNoArgTest(server)) // "loan" the fixture to the test
     } finally
       server.stop() // clean up the fixture
-
   }
 
   "ESServerTest" should {
