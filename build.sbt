@@ -25,10 +25,12 @@ val elasticsearch = "org.elasticsearch" % "elasticsearch" % elasticsearchVersion
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4" % Test
 val commonsIO = "commons-io" % "commons-io" % "2.4"
 val wabiSabi = "wabisabi" %% "wabisabi" % "2.1.4"
+// TODO: choose one of the 2 below
 val playJson = "com.typesafe.play" %% "play-json" % "2.4.2" exclude ("org.slf4j", "slf4j-log4j12")
+val json4s = "org.json4s" % "json4s-jackson_2.11" % "3.3.0"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3" % Test
 
-libraryDependencies ++= Seq(utilLib, betterFiles, elasticsearch, commonsIO, scalaTest, wabiSabi, playJson, logbackClassic)
+libraryDependencies ++= Seq(utilLib, betterFiles, elasticsearch, commonsIO, scalaTest, wabiSabi, playJson, json4s, logbackClassic)
 
 // Dependency overridesx
 val nettyOverride = "io.netty" % "netty" % "3.9.2.Final"
