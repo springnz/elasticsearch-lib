@@ -1,14 +1,14 @@
 package springnz.elasticsearch.client
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 import org.apache.commons.io.FileUtils
-import org.elasticsearch.action.index.{IndexAction, IndexRequest, IndexRequestBuilder}
-import org.elasticsearch.action.search.{SearchAction, SearchRequestBuilder}
+import org.elasticsearch.action.index.{ IndexAction, IndexRequest, IndexRequestBuilder }
+import org.elasticsearch.action.search.{ SearchAction, SearchRequestBuilder }
 import org.elasticsearch.client.Client
 import org.elasticsearch.index.query.QueryBuilders
-import org.scalatest.{ShouldMatchers, fixture}
-import springnz.elasticsearch.server.{ESServer, ESServerParams}
+import org.scalatest.{ ShouldMatchers, fixture }
+import springnz.elasticsearch.server.{ ESServer, ESServerParams }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

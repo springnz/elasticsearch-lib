@@ -1,7 +1,7 @@
 package springnz.elasticsearch.server
 
-import com.ning.http.client.{Request, Response}
-import dispatch.{url, Req, Future}
+import com.ning.http.client.Response
+import dispatch.{ Future, Req, url }
 import org.scalatest._
 import play.api.libs.json.Json
 import springnz.elasticsearch.utils.HttpUtils
@@ -49,7 +49,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
       index.getResponseBody shouldBe """{"acknowledged":true}"""
     }
 
-    "check we can connect with HttpUtils" in { server =>
+    "check we can connect with HttpUtils" in { server ⇒
       server.start()
       val request: Req = url(s"http://localhost:$port").GET
       import HttpUtils._
@@ -57,7 +57,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
       import scala.concurrent.ExecutionContext.Implicits.global
       val responseFuture = request.processHttpRequest(waitForComplete = true)
       val response = Await.result(responseFuture, 10 seconds)
-      Json.stringify(response.json) should include ("You Know, for Search")
+      Json.stringify(response.json) should include("You Know, for Search")
     }
   }
 }
