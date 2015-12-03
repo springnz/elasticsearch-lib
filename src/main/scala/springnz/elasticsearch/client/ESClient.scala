@@ -7,10 +7,11 @@ import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.node.NodeBuilder
+import springnz.util.Logging
 
 import scala.language.implicitConversions
 
-object ESClient {
+object ESClient extends Logging {
 
   /**
     * Creates an ElasticClient connected to the elasticsearch instance(s) specified by the uri.
@@ -39,6 +40,7 @@ object ESClient {
     */
   def transport(settings: Settings, uri: ESClientURI): Client = {
     val client = TransportClient.builder.settings(settings).build()
+    log.info(s"Creating an Elasticsearch client with settings: $settings")
     for ((host, port) ← uri.hosts) {
       client.addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(host, port)))
     }

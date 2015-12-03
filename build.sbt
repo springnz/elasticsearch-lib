@@ -15,7 +15,7 @@ resolvers ++= Seq(
 
 // Library versions
 val elasticsearchVersion = "2.0.0"
-val utilLibVersion = "2.6.0"
+val utilLibVersion = "2.7.0"
 val akkaVersion = "2.3.12"
 
 // Library dependencies
@@ -32,7 +32,7 @@ val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3" % Test
 
 libraryDependencies ++= Seq(utilLib, betterFiles, elasticsearch, commonsIO, scalaTest, wabiSabi, playJson, json4s, logbackClassic)
 
-// Dependency overridesx
+// Dependency overrides
 val nettyOverride = "io.netty" % "netty" % "3.9.2.Final"
 val dependencyOverridesSet = Set(elasticsearch, nettyOverride)
 dependencyOverrides := dependencyOverridesSet

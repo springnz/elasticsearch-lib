@@ -53,6 +53,7 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
   def start(): Unit = {
     log.info(s"Starting embedded server node for cluster '$clusterName'")
     node.start()
+
   }
 
   def stop(): Unit = {
