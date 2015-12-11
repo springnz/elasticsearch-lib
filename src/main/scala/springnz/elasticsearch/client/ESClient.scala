@@ -2,6 +2,12 @@ package springnz.elasticsearch.client
 
 import java.net.InetSocketAddress
 
+import org.elasticsearch.action.admin.indices.close.{ CloseIndexRequest, CloseIndexResponse }
+import org.elasticsearch.action.admin.indices.create.{ CreateIndexAction, CreateIndexRequestBuilder, CreateIndexResponse }
+import org.elasticsearch.action.admin.indices.mapping.get.{ GetMappingsAction, GetMappingsRequestBuilder, GetMappingsResponse }
+import org.elasticsearch.action.admin.indices.mapping.put.{ PutMappingAction, PutMappingRequestBuilder, PutMappingResponse }
+import org.elasticsearch.action.admin.indices.settings.put.{ UpdateSettingsAction, UpdateSettingsRequestBuilder, UpdateSettingsResponse }
+import org.elasticsearch.action.index.{ IndexAction, IndexRequestBuilder, IndexResponse }
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
@@ -9,9 +15,40 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.node.NodeBuilder
 import springnz.util.Logging
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.language.implicitConversions
 
+object ClientPimper {
+
+  implicit class ClientOps(javaClient: Client) {
+    def execute[Request, Response](request: Request)(
+      implicit action: ActionMagnet[Request, Response]): Future[Response] =
+      action.execute(javaClient, request)
+
+    def createIndex(indexName: String): Future[CreateIndexResponse] =
+      ESClient.createIndex(javaClient, indexName)
+
+    def closeIndex(indexName: String): Future[CloseIndexResponse] =
+      ESClient.closeIndex(javaClient, indexName)
+
+    def updateSettings(indexName: String, source: String): Future[UpdateSettingsResponse] =
+      ESClient.updateSettings(javaClient, indexName, source)
+
+    def insert(indexName: String, typeName: String, source: String): Future[IndexResponse] =
+      ESClient.insert(javaClient, indexName, typeName, source)
+
+    def putMapping(indexName: String, typeName: String, source: String): Future[PutMappingResponse] =
+      ESClient.putMapping(javaClient, indexName, typeName, source)
+
+    def getMapping(indexName: String, typeName: String, source: String): Future[GetMappingsResponse] =
+      ESClient.getMapping(javaClient, indexName, typeName, source)
+  }
+}
+
 object ESClient extends Logging {
+
+  import ClientPimper._
 
   /**
     * Creates an ElasticClient connected to the elasticsearch instance(s) specified by the uri.
@@ -60,6 +97,44 @@ object ESClient extends Logging {
   def local(settings: Settings): Client = {
     val node = NodeBuilder.nodeBuilder().local(true).data(true).settings(settings).node()
     node.client
+  }
+
+  def createIndex(client: Client, indexName: String): Future[CreateIndexResponse] = {
+    val request = new CreateIndexRequestBuilder(client, CreateIndexAction.INSTANCE).setIndex(indexName).request()
+    client.execute(request)
+  }
+
+  def closeIndex(client: Client, indexName: String): Future[CloseIndexResponse] = {
+    val javaFuture = client.admin().indices().close(new CloseIndexRequest(indexName))
+    Future {
+      javaFuture.get()
+    }
+  }
+
+  def updateSettings(client: Client, indexName: String, source: String): Future[UpdateSettingsResponse] = {
+    val request = new UpdateSettingsRequestBuilder(client, UpdateSettingsAction.INSTANCE).setSettings(source).request()
+    client.execute(request)
+  }
+
+  def insert(client: Client, indexName: String, typeName: String, source: String): Future[IndexResponse] = {
+    val request = new IndexRequestBuilder(client, IndexAction.INSTANCE)
+      .setIndex(indexName).setType(typeName).setSource(source)
+      .request()
+    client.execute(request)
+  }
+
+  def putMapping(client: Client, indexName: String, typeName: String, source: String): Future[PutMappingResponse] = {
+    val request = new PutMappingRequestBuilder(client, PutMappingAction.INSTANCE)
+      .setIndices(indexName).setType(typeName).setSource(source)
+      .request()
+    client.execute(request)
+  }
+
+  def getMapping(client: Client, indexName: String, typeName: String, source: String): Future[GetMappingsResponse] = {
+    val request = new GetMappingsRequestBuilder(client, GetMappingsAction.INSTANCE)
+      .setIndices(indexName).setTypes(typeName)
+      .request()
+    client.execute(request)
   }
 }
 

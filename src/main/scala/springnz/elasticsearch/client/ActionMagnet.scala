@@ -103,6 +103,7 @@ object ActionMagnet {
   implicit val aliasesExistsAction = magnet(AliasesExistAction.INSTANCE)
   implicit val getAliasesAction = magnet(GetAliasesAction.INSTANCE)
   implicit val analyzeAction = magnet(AnalyzeAction.INSTANCE)
+
   implicit val clearIndicesCacheAction = magnet(ClearIndicesCacheAction.INSTANCE)
   implicit val closeIndexAction = magnet(CloseIndexAction.INSTANCE)
   implicit val createIndexAction = magnet(CreateIndexAction.INSTANCE)
@@ -110,6 +111,7 @@ object ActionMagnet {
   implicit val getIndexTemplatesAction = magnet(GetIndexTemplatesAction.INSTANCE)
   implicit val deleteIndexTemplateAction = magnet(DeleteIndexTemplateAction.INSTANCE)
   implicit val putIndexTemplateAction = magnet(PutIndexTemplateAction.INSTANCE)
+
   implicit val getMappingsAction = magnet(GetMappingsAction.INSTANCE)
   implicit val getFieldMappingsAction = magnet(GetFieldMappingsAction.INSTANCE)
   //  implicit val deleteMappingAction = magnet(DeleteMappingAction.INSTANCE)
