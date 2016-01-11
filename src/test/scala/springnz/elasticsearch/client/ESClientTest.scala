@@ -10,6 +10,7 @@ import springnz.elasticsearch.server.{ ESServer, ESServerParams }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
 class ESClientTest extends fixture.WordSpec with ShouldMatchers {
 
@@ -28,8 +29,8 @@ class ESClientTest extends fixture.WordSpec with ShouldMatchers {
       server.start()
       withFixture(test.toNoArgTest(server)) // "loan" the fixture to the test
     } finally {
-      FileUtils.forceDelete(snapshotDirPath.toFile)
-      server.stop() // clean up the fixture
+      FileUtils.deleteDirectory(snapshotDirPath.toFile)
+      server.stop()
     }
   }
 
