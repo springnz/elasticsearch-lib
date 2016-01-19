@@ -14,7 +14,7 @@ resolvers ++= Seq(
 )
 
 // Library versions
-val elasticsearchVersion = "2.1.1"
+val elasticsearchVersion = "2.0.0"
 val utilLibVersion = "2.8.0"
 val akkaVersion = "2.3.12"
 
