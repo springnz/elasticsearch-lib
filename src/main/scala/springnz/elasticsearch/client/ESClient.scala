@@ -84,11 +84,16 @@ object ESClient {
     */
   def transport(settings: Settings, uri: ESClientURI)(implicit log: Logger): Client = {
     val client = TransportClient.builder.settings(settings).build()
-    log.info(s"Creating an Elasticsearch client with settings [$settings]")
+    log.info(s"Creating an Elasticsearch client with settings [${settings.getAsMap}]")
     for ((host, port) ← uri.hosts) {
       client.addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(host, port)))
     }
     client
+  }
+
+  def transport(uri: ESClientURI, clusterName: String)(implicit log: Logger): Client = {
+    val settings = Settings.settingsBuilder().put("cluster.name", clusterName).build()
+    transport(settings, uri)
   }
 
   /**
@@ -102,7 +107,7 @@ object ESClient {
     * @param settings the settings object to set on the node
     */
   def local(settings: Settings)(implicit log: Logger): Client = {
-    log.info(s"Creating an Elasticsearch client with settings [$settings]")
+    log.info(s"Creating an Elasticsearch client with settings [${settings.getAsMap}]")
     val node = NodeBuilder.nodeBuilder().local(true).data(true).settings(settings).node()
     node.client
   }
