@@ -13,7 +13,7 @@ resolvers ++= Seq(
 )
 
 // Library versions
-val elasticsearchVersion = "2.0.0"
+val elasticsearchVersion = "2.0.2"
 val utilLibVersion = "2.8.0"
 val akkaVersion = "2.3.12"
 
@@ -27,6 +27,7 @@ val wabiSabi = "wabisabi" %% "wabisabi" % "2.1.4"
 val playJson = "com.typesafe.play" %% "play-json" % "2.4.2" exclude ("org.slf4j", "slf4j-log4j12")
 val json4s = "org.json4s" %% "json4s-jackson" % "3.2.10"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3" % Test
+val jts = "com.vividsolutions" % "jts" % "1.13" % Compile
 
 libraryDependencies ++= Seq(utilLib, elasticsearch, commonsIO, scalaTest, wabiSabi, playJson, json4s, logbackClassic)
 

@@ -28,7 +28,6 @@ import org.elasticsearch.action.admin.indices.flush.FlushAction
 import org.elasticsearch.action.admin.indices.mapping.get.{ GetFieldMappingsAction, GetMappingsAction }
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingAction
 import org.elasticsearch.action.admin.indices.open.OpenIndexAction
-import org.elasticsearch.action.admin.indices.optimize.OptimizeAction
 import org.elasticsearch.action.admin.indices.recovery.RecoveryAction
 import org.elasticsearch.action.admin.indices.refresh.RefreshAction
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentsAction
@@ -124,7 +123,7 @@ object ActionMagnet {
   implicit val indicesSegmentsAction = magnet(IndicesSegmentsAction.INSTANCE)
   implicit val indicesStatsAction = magnet(IndicesStatsAction.INSTANCE)
   implicit val openIndexAction = magnet(OpenIndexAction.INSTANCE)
-  implicit val optimizeAction = magnet(OptimizeAction.INSTANCE)
+//  implicit val optimizeAction = magnet(OptimizeAction.INSTANCE)
   implicit val putMappingAction = magnet(PutMappingAction.INSTANCE)
   implicit val putWarmerAction = magnet(PutWarmerAction.INSTANCE)
   implicit val refreshAction = magnet(RefreshAction.INSTANCE)

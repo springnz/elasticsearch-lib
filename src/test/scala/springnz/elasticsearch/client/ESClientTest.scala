@@ -7,24 +7,29 @@ import org.elasticsearch.action.search.{ SearchAction, SearchRequestBuilder }
 import org.elasticsearch.index.query.QueryBuilders
 import org.scalatest.{ ShouldMatchers, fixture }
 import springnz.elasticsearch.server.{ ESServer, ESServerParams }
+import springnz.util.Logging
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
 
-class ESClientTest extends fixture.WordSpec with ShouldMatchers {
-
-  import ClientPimper._
-  import ESClient._
+trait ESEmbedded extends fixture.WordSpec with Logging {
 
   override type FixtureParam = ESServer
 
+  val esBinaryPort = 9300
+  val esHttpPort = None
+  val clusterName = "elasticsearch"
+  val extraConfig: Map[String, String] = Map.empty
+
   // TODO: create a working example of Snapshotting an index
-  private val snapshotDirPath: Path = Files.createTempDirectory(s"snapshot-")
-  private val timeout = 5.seconds
+  val snapshotDirPath: Path = Files.createTempDirectory(s"snapshot-")
+
+  val serverParams = ESServerParams(esHttpPort, Seq(snapshotDirPath.toString), extraConfig)
+
+  def newClient() = ESClient.transport(ESClientURI("localhost", esBinaryPort), clusterName)
 
   override def withFixture(test: OneArgTest) = {
-    val server = new ESServer("elasticsearch", ESServerParams(httpPort = None, repos = Seq(snapshotDirPath.toString)))
+    val server = new ESServer(clusterName, serverParams)
     try {
       server.start()
       withFixture(test.toNoArgTest(server)) // "loan" the fixture to the test
@@ -33,18 +38,33 @@ class ESClientTest extends fixture.WordSpec with ShouldMatchers {
       server.stop()
     }
   }
+}
+
+class ESClientTest extends ESEmbedded with ShouldMatchers {
+
+  import ClientPimper._
+
+  val timeout = 5.seconds
 
   "ESClientTest" should {
 
     "create index" in { server ⇒
-      val client = transport(ESClientURI("localhost", 9300))
+      val client = newClient()
       val indexName = "testindex"
       val result = Await.ready(client.createIndex(indexName), timeout)
       result.value.get.isSuccess shouldBe true
     }
 
+    "create, close, delete index" in { server ⇒
+      val client = newClient()
+      val indexName = "testindex"
+      Await.ready(client.createIndex(indexName), timeout)
+      Await.ready(client.closeIndex(indexName), timeout)
+      Await.result(client.deleteIndex(indexName), timeout)
+    }
+
     "create index, close it, update settings" in { server ⇒
-      val client = transport(ESClientURI("localhost", 9300))
+      val client = newClient()
       val indexName = "testindex"
       val settings =
         """
@@ -62,7 +82,7 @@ class ESClientTest extends fixture.WordSpec with ShouldMatchers {
         """.stripMargin
 
       Await.result(client.createIndex(indexName), timeout)
-      Thread.sleep(1000) // must wait a while for index to be created even after future completes
+      Thread.sleep(1000)
 
       Await.result(client.closeIndex(indexName), timeout) // must close index before updating settings
 
@@ -71,7 +91,7 @@ class ESClientTest extends fixture.WordSpec with ShouldMatchers {
     }
 
     "insert then search" in { server ⇒
-      val client = transport(ESClientURI("localhost", 9300))
+      val client = newClient()
       val indexName = "testindex"
       val typeName = "docs"
       val source =
@@ -82,11 +102,11 @@ class ESClientTest extends fixture.WordSpec with ShouldMatchers {
         """.stripMargin
 
       Await.result(client.createIndex(indexName), timeout)
-      Thread.sleep(1000) // must wait for index to be created even after future completes
+      Thread.sleep(1000)
 
       val insertResult = Await.ready(client.insert(indexName, typeName, source), timeout)
       insertResult.value.get.isSuccess shouldBe true
-      Thread.sleep(1000) // must wait for insert to be processed
+      Thread.sleep(1000)
 
       val searchRequest = new SearchRequestBuilder(client, SearchAction.INSTANCE)
         .setIndices(indexName)
@@ -99,20 +119,27 @@ class ESClientTest extends fixture.WordSpec with ShouldMatchers {
     }
 
     "put and get mapping" in { server ⇒
-      val client = transport(ESClientURI("localhost", 9300))
+      val client = newClient()
       val indexName = "testindex"
       val typeName = "docs"
       val source = """{"docs":{"properties":{"somefield":{"type":"string"}}}}"""
 
       Await.result(client.createIndex(indexName), timeout)
-      Thread.sleep(1000) // must wait for index to be created even after future completes
+      Thread.sleep(1000)
 
       val putFuture = Await.ready(client.putMapping(indexName, typeName, source), timeout)
       putFuture.value.get.isSuccess shouldBe true
 
-      val mappingsResponse = Await.result(client.getMapping(indexName, typeName, source), timeout)
+      val mappingsResponse = Await.result(client.getMapping(indexName, typeName), timeout)
       val mapping = mappingsResponse.getMappings.get(indexName).get(typeName).source()
       mapping.toString shouldBe source
+    }
+
+    "get aliases" in { server ⇒
+      val client = newClient()
+      val indexName = "testindex"
+      val result = Await.ready(client.createIndex(indexName), timeout)
+
     }
   }
 }
