@@ -9,7 +9,6 @@ releaseVersionBump := sbtrelease.Version.Bump.Bugfix
 resolvers ++= Seq(
   Resolver.mavenLocal,
   "Java.net Maven2 Repository" at "http://download.java.net/maven/2/",
-  Resolver.bintrayRepo("pathikrit", "maven"), // for betterfiles
   "gphat" at "https://raw.github.com/gphat/mvn-repo/master/releases/" // for wabisabi
 )
 
@@ -20,7 +19,6 @@ val akkaVersion = "2.3.12"
 
 // Library dependencies
 val utilLib = "springnz" %% "util-lib" % utilLibVersion
-val betterFiles = "com.github.pathikrit" %% "better-files" % "2.4.1"
 val elasticsearch = "org.elasticsearch" % "elasticsearch" % elasticsearchVersion
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4" % Test
 val commonsIO = "commons-io" % "commons-io" % "2.4"
@@ -31,7 +29,7 @@ val json4s = "org.json4s" %% "json4s-jackson" % "3.2.10"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3" % Test
 val jts = "com.vividsolutions" % "jts" % "1.13" % Compile
 
-libraryDependencies ++= Seq(utilLib, betterFiles, elasticsearch, commonsIO, scalaTest, wabiSabi, playJson, json4s, logbackClassic, jts)
+libraryDependencies ++= Seq(utilLib, elasticsearch, commonsIO, scalaTest, wabiSabi, playJson, json4s, logbackClassic)
 
 // Dependency overrides
 val nettyOverride = "io.netty" % "netty" % "3.9.2.Final"
