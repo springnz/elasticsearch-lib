@@ -65,28 +65,16 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
 
     "create index, close it, update settings" in { server ⇒
       val client = newClient()
+
+      // Settings
+
       val indexName = "testindex"
-      val settings =
-        """
-          |{
-          |  "analysis": {
-          |    "filter": {
-          |      "name_autocomplete_filter": {
-          |        "type": "edge_ngram",
-          |        "min_gram": 1,
-          |        "max_gram": 18
-          |      }
-          |    }
-          |  }
-          |}
-        """.stripMargin
 
       Await.result(client.createIndex(indexName), timeout)
       Thread.sleep(1000)
-
       Await.result(client.closeIndex(indexName), timeout) // must close index before updating settings
 
-      val result = Await.ready(client.updateSettings(indexName, settings), timeout)
+      val result = Await.ready(client.updateSettings(indexName, JsonSources.settingsSource), timeout)
       result.value.get.isSuccess shouldBe true
     }
 
@@ -127,8 +115,8 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
       Await.result(client.createIndex(indexName), timeout)
       Thread.sleep(1000)
 
-      val putFuture = Await.ready(client.putMapping(indexName, typeName, source), timeout)
-      putFuture.value.get.isSuccess shouldBe true
+      val putMappingFuture = Await.ready(client.putMapping(indexName, typeName, source), timeout)
+      putMappingFuture.value.get.isSuccess shouldBe true
 
       val mappingsResponse = Await.result(client.getMapping(indexName, typeName), timeout)
       val mapping = mappingsResponse.getMappings.get(indexName).get(typeName).source()
@@ -139,7 +127,59 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
       val client = newClient()
       val indexName = "testindex"
       val result = Await.ready(client.createIndex(indexName), timeout)
-
     }
+
+    "create index, close it, update settings, update mapping, open index" in { server ⇒
+      val client = newClient()
+
+      // Settings
+
+      val indexName = "testindex"
+
+      Await.result(client.createIndex(indexName), timeout)
+      Thread.sleep(1000)
+      Await.result(client.closeIndex(indexName), timeout) // must close index before updating settings
+
+      val result = Await.ready(client.updateSettings(indexName, JsonSources.settingsSource), timeout)
+      result.value.get.isSuccess shouldBe true
+
+      // Mapping
+
+      val typeName = "docs"
+      val mappingSource = s"""{"$typeName":{"properties":{"somefield":{"type":"string", "analyzer": "autocomplete_word"}}}}"""
+      val putMappingFuture = Await.ready(client.putMapping(indexName, typeName, mappingSource), timeout)
+
+      putMappingFuture.value.get.isSuccess shouldBe true
+
+      // reopen the index
+      Await.result(client.openIndex(indexName), timeout) // throws an exception if failed
+    }
+  }
+
+  object JsonSources {
+    val settingsSource = """
+      |{
+      |  "analysis": {
+      |    "filter": {
+      |      "autocomplete_word_filter": {
+      |        "type": "edge_ngram",
+      |        "min_gram": 1,
+      |        "max_gram": 18
+      |      }
+      |    },
+      |    "analyzer": {
+      |      "autocomplete_word": {
+      |        "type": "custom",
+      |        "tokenizer": "standard",
+      |        "filter": [
+      |          "lowercase",
+      |          "stop",
+      |          "autocomplete_word_filter"
+      |        ]
+      |      }
+      |    }
+      |  }
+      |}
+    """.stripMargin
   }
 }

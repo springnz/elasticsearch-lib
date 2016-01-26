@@ -9,6 +9,7 @@ import org.elasticsearch.action.admin.indices.create.{ CreateIndexAction, Create
 import org.elasticsearch.action.admin.indices.delete.{ DeleteIndexAction, DeleteIndexRequestBuilder, DeleteIndexResponse }
 import org.elasticsearch.action.admin.indices.mapping.get.{ GetMappingsAction, GetMappingsRequestBuilder, GetMappingsResponse }
 import org.elasticsearch.action.admin.indices.mapping.put.{ PutMappingAction, PutMappingRequestBuilder, PutMappingResponse }
+import org.elasticsearch.action.admin.indices.open.{ OpenIndexRequest, OpenIndexResponse }
 import org.elasticsearch.action.admin.indices.settings.put.{ UpdateSettingsAction, UpdateSettingsRequestBuilder, UpdateSettingsResponse }
 import org.elasticsearch.action.index.{ IndexAction, IndexRequestBuilder, IndexResponse }
 import org.elasticsearch.client.Client
@@ -16,7 +17,6 @@ import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.node.NodeBuilder
-import springnz.util.Logging
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -35,6 +35,9 @@ object ClientPimper {
 
     def closeIndex(indexName: String)(implicit log: Logger): Future[CloseIndexResponse] =
       ESClient.closeIndex(javaClient, indexName)
+
+    def openIndex(indexName: String)(implicit log: Logger): Future[OpenIndexResponse] =
+      ESClient.openIndex(javaClient, indexName)
 
     def deleteIndex(indexName: String)(implicit log: Logger): Future[DeleteIndexResponse] =
       ESClient.deleteIndex(javaClient, indexName)
@@ -104,6 +107,7 @@ object ESClient {
 
   /**
     * Creates a local data node. This is useful for embedded usage, or for unit tests.
+    *
     * @param settings the settings object to set on the node
     */
   def local(settings: Settings)(implicit log: Logger): Client = {
@@ -121,6 +125,14 @@ object ESClient {
   def closeIndex(client: Client, indexName: String)(implicit log: Logger): Future[CloseIndexResponse] = {
     log.info(s"Closing index [$indexName]")
     val javaFuture = client.admin().indices().close(new CloseIndexRequest(indexName))
+    Future {
+      javaFuture.get()
+    }
+  }
+
+  def openIndex(client: Client, indexName: String)(implicit log: Logger): Future[OpenIndexResponse] = {
+    log.info(s"Opening index [$indexName]")
+    val javaFuture = client.admin().indices().open(new OpenIndexRequest(indexName))
     Future {
       javaFuture.get()
     }
