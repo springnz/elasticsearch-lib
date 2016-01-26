@@ -157,7 +157,10 @@ object ESClient {
 
   def updateSettings(client: Client, indexName: String, source: String)(implicit log: Logger): Future[UpdateSettingsResponse] = {
     log.info(s"Updating settings for index [$indexName]")
-    val request = new UpdateSettingsRequestBuilder(client, UpdateSettingsAction.INSTANCE).setSettings(source).request()
+    val request = new UpdateSettingsRequestBuilder(client, UpdateSettingsAction.INSTANCE)
+      .setIndices(indexName)
+      .setSettings(source)
+      .request()
     client.execute(request)
   }
 

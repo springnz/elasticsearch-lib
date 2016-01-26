@@ -132,12 +132,15 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
     "create index, close it, update settings, update mapping, open index" in { server ⇒
       val client = newClient()
 
-      // Settings
-
       val indexName = "testindex"
 
+      // Settings
       Await.result(client.createIndex(indexName), timeout)
       Thread.sleep(1000)
+
+      Await.result(client.createIndex("openindex"), timeout) // create another index and leave it open
+      Thread.sleep(1000)
+
       Await.result(client.closeIndex(indexName), timeout) // must close index before updating settings
 
       val result = Await.ready(client.updateSettings(indexName, JsonSources.settingsSource), timeout)
