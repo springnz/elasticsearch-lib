@@ -26,7 +26,7 @@ object ClientPimper {
 
   implicit class ClientOps(javaClient: Client) {
 
-    def execute[Request, Response](request: Request)(
+    def executeRequest[Request, Response](request: Request)(
       implicit action: ActionMagnet[Request, Response]): Future[Response] =
       action.execute(javaClient, request)
 
@@ -119,7 +119,7 @@ object ESClient {
   def createIndex(client: Client, indexName: String)(implicit log: Logger): Future[CreateIndexResponse] = {
     log.info(s"Creating index [$indexName]")
     val request = new CreateIndexRequestBuilder(client, CreateIndexAction.INSTANCE).setIndex(indexName).request()
-    client.execute(request)
+    client.executeRequest(request)
   }
 
   def closeIndex(client: Client, indexName: String)(implicit log: Logger): Future[CloseIndexResponse] = {
@@ -161,7 +161,7 @@ object ESClient {
       .setIndices(indexName)
       .setSettings(source)
       .request()
-    client.execute(request)
+    client.executeRequest(request)
   }
 
   def insert(client: Client, indexName: String, typeName: String, source: String)(implicit log: Logger): Future[IndexResponse] = {
@@ -169,7 +169,7 @@ object ESClient {
     val request = new IndexRequestBuilder(client, IndexAction.INSTANCE)
       .setIndex(indexName).setType(typeName).setSource(source)
       .request()
-    client.execute(request)
+    client.executeRequest(request)
   }
 
   def putMapping(client: Client, indexName: String, typeName: String, source: String)(implicit log: Logger): Future[PutMappingResponse] = {
@@ -177,7 +177,7 @@ object ESClient {
     val request = new PutMappingRequestBuilder(client, PutMappingAction.INSTANCE)
       .setIndices(indexName).setType(typeName).setSource(source)
       .request()
-    client.execute(request)
+    client.executeRequest(request)
   }
 
   def getMapping(client: Client, indexName: String, typeName: String)(implicit log: Logger): Future[GetMappingsResponse] = {
@@ -185,7 +185,7 @@ object ESClient {
     val request = new GetMappingsRequestBuilder(client, GetMappingsAction.INSTANCE)
       .setIndices(indexName).setTypes(typeName)
       .request()
-    client.execute(request)
+    client.executeRequest(request)
   }
 }
 

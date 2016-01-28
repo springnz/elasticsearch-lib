@@ -102,7 +102,7 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
         .setQuery(QueryBuilders.termQuery("name", "bob"))
         .request()
 
-      val searchResponse = Await.result(client.execute(searchRequest), timeout)
+      val searchResponse = Await.result(client.executeRequest(searchRequest), timeout)
       searchResponse.getHits.totalHits shouldBe 1
     }
 
