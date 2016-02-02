@@ -1,14 +1,13 @@
 package springnz.elasticsearch.utils
 
 import com.ning.http.client.Response
-import dispatch.{ Http, Req }
-import play.api.libs.json.{ JsValue, Json }
+import dispatch.{Http, Req}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 object HttpUtils {
 
-  case class ResponseResult(response: Response, json: JsValue)
+  case class ResponseResult(response: Response, json: String)
 
   implicit class ReqOps(request: Req) {
 
@@ -16,8 +15,7 @@ object HttpUtils {
       val requestAdded = if (waitForComplete) request.addQueryParameter("wait_for_completion", "true") else request
       Http(requestAdded).map { response ⇒
         val responseBody = response.getResponseBody
-        val responseJson: JsValue = Json.parse(responseBody)
-        ResponseResult(response = response, json = responseJson)
+        ResponseResult(response = response, json = responseBody)
       }
     }
   }

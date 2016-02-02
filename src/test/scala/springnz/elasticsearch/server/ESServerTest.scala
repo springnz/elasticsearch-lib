@@ -1,9 +1,8 @@
 package springnz.elasticsearch.server
 
 import com.ning.http.client.Response
-import dispatch.{ Future, Req, url }
+import dispatch.{Future, Req, url}
 import org.scalatest._
-import play.api.libs.json.Json
 import springnz.elasticsearch.utils.HttpUtils
 import wabisabi._
 
@@ -57,7 +56,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
       import scala.concurrent.ExecutionContext.Implicits.global
       val responseFuture = request.processHttpRequest(waitForComplete = true)
       val response = Await.result(responseFuture, 10 seconds)
-      Json.stringify(response.json) should include("You Know, for Search")
+      response.json should include("You Know, for Search")
     }
   }
 }
