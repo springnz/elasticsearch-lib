@@ -1,7 +1,7 @@
 package springnz.elasticsearch.server
 
 import com.ning.http.client.Response
-import dispatch.{Future, Req, url}
+import dispatch.{ Future, Req, url }
 import org.scalatest._
 import springnz.elasticsearch.utils.HttpUtils
 import wabisabi._

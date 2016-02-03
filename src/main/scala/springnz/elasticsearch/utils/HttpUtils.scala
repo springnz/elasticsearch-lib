@@ -1,9 +1,9 @@
 package springnz.elasticsearch.utils
 
 import com.ning.http.client.Response
-import dispatch.{Http, Req}
+import dispatch.{ Http, Req }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 object HttpUtils {
 
