@@ -89,6 +89,7 @@ object ESClient {
     val client = TransportClient.builder.settings(settings).build()
     log.info(s"Creating an Elasticsearch client with settings [${settings.getAsMap}]")
     for ((host, port) ← uri.hosts) {
+      log.debug(s"Elasticsearch client setting transport address $host:$port")
       client.addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(host, port)))
     }
     client
