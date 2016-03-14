@@ -123,12 +123,6 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
       mapping.toString shouldBe source
     }
 
-    "get aliases" in { server ⇒
-      val client = newClient()
-      val indexName = "testindex"
-      val result = Await.ready(client.createIndex(indexName), timeout)
-    }
-
     "create index, close it, update settings, update mapping, open index" in { server ⇒
       val client = newClient()
 
