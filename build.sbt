@@ -13,9 +13,8 @@ resolvers ++= Seq(
 )
 
 // Library versions
-val elasticsearchVersion = "2.0.2"
+val elasticsearchVersion = "2.2.0"
 val utilLibVersion = "2.8.0"
-val akkaVersion = "2.3.12"
 
 // Library dependencies
 val utilLib = "springnz" %% "util-lib" % utilLibVersion
