@@ -71,7 +71,6 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
       val indexName = "testindex"
 
       Await.result(client.createIndex(indexName), timeout)
-      Thread.sleep(1000)
       Await.result(client.closeIndex(indexName), timeout) // must close index before updating settings
 
       val result = Await.ready(client.updateSettings(indexName, JsonSources.settingsSource), timeout)
@@ -90,7 +89,6 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
         """.stripMargin
 
       Await.result(client.createIndex(indexName), timeout)
-      Thread.sleep(1000)
 
       val insertResult = Await.ready(client.insert(indexName, typeName, source), timeout)
       insertResult.value.get.isSuccess shouldBe true
@@ -113,7 +111,6 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
       val source = """{"docs":{"properties":{"somefield":{"type":"string"}}}}"""
 
       Await.result(client.createIndex(indexName), timeout)
-      Thread.sleep(1000)
 
       val putMappingFuture = Await.ready(client.putMapping(indexName, typeName, source), timeout)
       putMappingFuture.value.get.isSuccess shouldBe true
@@ -130,10 +127,8 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
 
       // Settings
       Await.result(client.createIndex(indexName), timeout)
-      Thread.sleep(1000)
 
       Await.result(client.createIndex("openindex"), timeout) // create another index and leave it open
-      Thread.sleep(1000)
 
       Await.result(client.closeIndex(indexName), timeout) // must close index before updating settings
 

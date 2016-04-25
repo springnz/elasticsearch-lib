@@ -18,6 +18,7 @@ import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.node.NodeBuilder
 
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
@@ -30,29 +31,40 @@ object ClientPimper {
       implicit action: ActionMagnet[Request, Response]): Future[Response] =
       action.execute(javaClient, request)
 
+    private def executeAndWaitForYellow[A](clientFuture: Client ⇒ Future[A])(implicit log: Logger): Future[A] =
+      for {
+        result ← clientFuture(javaClient)
+        isYellow ← ESClient.waitForYellowHealthStatus(javaClient)
+      } yield {
+        result
+      }
+
     def createIndex(indexName: String)(implicit log: Logger): Future[CreateIndexResponse] =
-      ESClient.createIndex(javaClient, indexName)
+      executeAndWaitForYellow(client ⇒ ESClient.createIndex(client, indexName))
 
     def closeIndex(indexName: String)(implicit log: Logger): Future[CloseIndexResponse] =
-      ESClient.closeIndex(javaClient, indexName)
+      executeAndWaitForYellow(client ⇒ ESClient.closeIndex(client, indexName))
 
     def openIndex(indexName: String)(implicit log: Logger): Future[OpenIndexResponse] =
-      ESClient.openIndex(javaClient, indexName)
+      executeAndWaitForYellow(client ⇒ ESClient.openIndex(client, indexName))
 
     def deleteIndex(indexName: String)(implicit log: Logger): Future[DeleteIndexResponse] =
-      ESClient.deleteIndex(javaClient, indexName)
+      executeAndWaitForYellow(client ⇒ ESClient.deleteIndex(client, indexName))
 
     def updateSettings(indexName: String, source: String)(implicit log: Logger): Future[UpdateSettingsResponse] =
-      ESClient.updateSettings(javaClient, indexName, source)
+      executeAndWaitForYellow(client ⇒ ESClient.updateSettings(client, indexName, source))
 
     def insert(indexName: String, typeName: String, source: String)(implicit log: Logger): Future[IndexResponse] =
       ESClient.insert(javaClient, indexName, typeName, source)
 
     def putMapping(indexName: String, typeName: String, source: String)(implicit log: Logger): Future[PutMappingResponse] =
-      ESClient.putMapping(javaClient, indexName, typeName, source)
+      executeAndWaitForYellow(client ⇒ ESClient.putMapping(client, indexName, typeName, source))
 
     def getMapping(indexName: String, typeName: String)(implicit log: Logger): Future[GetMappingsResponse] =
       ESClient.getMapping(javaClient, indexName, typeName)
+
+    def waitForYellowHealthStatus()(implicit log: Logger): Future[Boolean] =
+      ESClient.waitForYellowHealthStatus(javaClient)
   }
 }
 
@@ -148,11 +160,18 @@ object ESClient {
     }
   }
 
-  def getIndices(client: Client)(implicit log: Logger): Future[Unit] = {
+  // unused / untested
+  def getAliases(client: Client)(implicit log: Logger) = {
     log.info(s"Getting aliases")
     val javaFuture = client.admin().indices().getAliases(new GetAliasesRequest())
     Future {
-      javaFuture.get()
+      javaFuture.get().getAliases.asScala.map {
+        case objectObjectCursor ⇒
+          val key = objectObjectCursor.key
+          val value = objectObjectCursor.value
+          val aliases = value.iterator.asScala.toList.map(_.alias)
+          key -> aliases
+      }.toList
     }
   }
 
@@ -187,6 +206,19 @@ object ESClient {
       .setIndices(indexName).setTypes(typeName)
       .request()
     client.executeRequest(request)
+  }
+
+  def waitForYellowHealthStatus(client: Client)(implicit log: Logger): Future[Boolean] = {
+    log.info(s"Waiting for yellow health status...")
+    val javaFuture = client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute()
+    Future {
+      val name = javaFuture.get().getStatus.name()
+      val isYellow = name == "YELLOW"
+      if (!isYellow) {
+        log.error(s"cluster health changed to $name")
+      }
+      isYellow
+    }
   }
 }
 
