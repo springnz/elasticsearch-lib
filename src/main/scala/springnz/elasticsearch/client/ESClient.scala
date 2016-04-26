@@ -34,7 +34,7 @@ object ClientPimper {
     private def executeAndWaitForYellow[A](clientFuture: Client ⇒ Future[A])(implicit log: Logger): Future[A] =
       for {
         result ← clientFuture(javaClient)
-        isYellow ← ESClient.waitForYellowHealthStatus(javaClient)
+        isYellow ← ESClient.waitForNonRedHealthStatus(javaClient)
       } yield {
         result
       }
@@ -64,7 +64,7 @@ object ClientPimper {
       ESClient.getMapping(javaClient, indexName, typeName)
 
     def waitForYellowHealthStatus()(implicit log: Logger): Future[Boolean] =
-      ESClient.waitForYellowHealthStatus(javaClient)
+      ESClient.waitForNonRedHealthStatus(javaClient)
   }
 }
 
@@ -208,16 +208,16 @@ object ESClient {
     client.executeRequest(request)
   }
 
-  def waitForYellowHealthStatus(client: Client)(implicit log: Logger): Future[Boolean] = {
-    log.info(s"Waiting for yellow health status...")
+  def waitForNonRedHealthStatus(client: Client)(implicit log: Logger): Future[Boolean] = {
+    log.info(s"Waiting for green or yellow health status...")
     val javaFuture = client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute()
     Future {
       val name = javaFuture.get().getStatus.name()
-      val isYellow = name == "YELLOW"
-      if (!isYellow) {
-        log.error(s"cluster health changed to $name")
+      val isRed = name == "RED"
+      if (isRed) {
+        log.error(s"cluster health changed to RED")
       }
-      isYellow
+      !isRed
     }
   }
 }
