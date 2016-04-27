@@ -3,13 +3,14 @@ package springnz.elasticsearch.client
 import java.nio.file.{ Files, Path }
 
 import org.apache.commons.io.FileUtils
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse
 import org.elasticsearch.action.search.{ SearchAction, SearchRequestBuilder }
 import org.elasticsearch.index.query.QueryBuilders
 import org.scalatest.{ ShouldMatchers, fixture }
 import springnz.elasticsearch.server.{ ESServer, ESServerParams }
 import springnz.util.Logging
 
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 
 trait ESEmbedded extends fixture.WordSpec with Logging {
@@ -118,6 +119,20 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
       val mappingsResponse = Await.result(client.getMapping(indexName, typeName), timeout)
       val mapping = mappingsResponse.getMappings.get(indexName).get(typeName).source()
       mapping.toString shouldBe source
+    }
+
+    "check presence of index" in { server ⇒
+      val client = newClient()
+      val indexName = "testindex"
+      val result = Await.ready(client.createIndex(indexName), timeout)
+      Thread.sleep(2000)
+      result.value.get.isSuccess shouldBe true
+
+      import scala.collection.JavaConverters._
+      val indicesStats: IndicesStatsResponse = Await.result(client.getIndicesStats(), timeout)
+      val indices = indicesStats.getIndices.asScala.toMap
+      indices.get(indexName).isDefined shouldBe true
+
     }
 
     "create index, close it, update settings, update mapping, open index" in { server ⇒

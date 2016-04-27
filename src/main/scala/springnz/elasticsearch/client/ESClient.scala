@@ -1,9 +1,11 @@
 package springnz.elasticsearch.client
 
 import java.net.InetSocketAddress
+import java.util
 
 import com.typesafe.scalalogging.Logger
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest
+import org.elasticsearch.action.ActionFuture
+import org.elasticsearch.action.admin.indices.alias.get.{GetAliasesResponse, GetAliasesRequest}
 import org.elasticsearch.action.admin.indices.close.{ CloseIndexRequest, CloseIndexResponse }
 import org.elasticsearch.action.admin.indices.create.{ CreateIndexAction, CreateIndexRequestBuilder, CreateIndexResponse }
 import org.elasticsearch.action.admin.indices.delete.{ DeleteIndexAction, DeleteIndexRequestBuilder, DeleteIndexResponse }
@@ -11,6 +13,7 @@ import org.elasticsearch.action.admin.indices.mapping.get.{ GetMappingsAction, G
 import org.elasticsearch.action.admin.indices.mapping.put.{ PutMappingAction, PutMappingRequestBuilder, PutMappingResponse }
 import org.elasticsearch.action.admin.indices.open.{ OpenIndexRequest, OpenIndexResponse }
 import org.elasticsearch.action.admin.indices.settings.put.{ UpdateSettingsAction, UpdateSettingsRequestBuilder, UpdateSettingsResponse }
+import org.elasticsearch.action.admin.indices.stats.{IndexStats, IndicesStatsResponse, IndicesStatsRequest}
 import org.elasticsearch.action.index.{ IndexAction, IndexRequestBuilder, IndexResponse }
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
@@ -50,6 +53,12 @@ object ClientPimper {
 
     def deleteIndex(indexName: String)(implicit log: Logger): Future[DeleteIndexResponse] =
       executeAndWaitForYellow(client ⇒ ESClient.deleteIndex(client, indexName))
+
+    def getIndicesStats()(implicit log: Logger): Future[IndicesStatsResponse] =
+      ESClient.getIndicesStats(javaClient)
+
+    def getAliases()(implicit log: Logger): Future[List[(String, List[String])]] =
+      ESClient.getAliases(javaClient)
 
     def updateSettings(indexName: String, source: String)(implicit log: Logger): Future[UpdateSettingsResponse] =
       executeAndWaitForYellow(client ⇒ ESClient.updateSettings(client, indexName, source))
@@ -160,8 +169,9 @@ object ESClient {
     }
   }
 
+
   // unused / untested
-  def getAliases(client: Client)(implicit log: Logger) = {
+  def getAliases(client: Client)(implicit log: Logger): Future[List[(String, List[String])]] = {
     log.info(s"Getting aliases")
     val javaFuture = client.admin().indices().getAliases(new GetAliasesRequest())
     Future {
@@ -172,6 +182,14 @@ object ESClient {
           val aliases = value.iterator.asScala.toList.map(_.alias)
           key -> aliases
       }.toList
+    }
+  }
+
+  def getIndicesStats(client: Client)(implicit log: Logger): Future[IndicesStatsResponse] = {
+    log.info(s"Getting aliases")
+    val javaFuture: ActionFuture[IndicesStatsResponse] = client.admin().indices().stats(new IndicesStatsRequest())
+    Future {
+      javaFuture.get()
     }
   }
 
