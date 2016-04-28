@@ -186,7 +186,7 @@ object ESClient {
   }
 
   def getIndicesStats(client: Client)(implicit log: Logger): Future[IndicesStatsResponse] = {
-    log.info(s"Getting aliases")
+    log.info(s"Getting indices stats")
     val javaFuture: ActionFuture[IndicesStatsResponse] = client.admin().indices().stats(new IndicesStatsRequest())
     Future {
       javaFuture.get()
