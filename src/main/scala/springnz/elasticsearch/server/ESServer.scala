@@ -24,6 +24,7 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
   private val esPluginDir = config.getString("elasticsearch-lib.elasticsearch-plugin-dir")
 
   log.info(s"Logging ESServer for cluster '$clusterName' to '$dataDir'")
+  log.info(s"Setting path.plugins to [$esPluginDir]")
 
   private val settings = {
     val _settings = Settings.settingsBuilder
