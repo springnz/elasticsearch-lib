@@ -3,7 +3,9 @@ package springnz.elasticsearch.server
 import java.io.File
 import java.nio.file.Files
 
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.apache.commons.io.FileUtils
+import org.elasticsearch.Version
 import org.elasticsearch.client.Client
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.node.NodeBuilder._
@@ -14,18 +16,22 @@ import scala.util.Try
 // adapted from https://orrsella.com/2014/10/28/embedded-elasticsearch-server-for-scala-integration-tests/
 case class ESServerParams(httpPort: Option[Int] = Some(9200), repos: Seq[String] = Seq.empty[String], extraConfig: Map[String, String] = Map.empty)
 
-class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParams()) extends Logging {
+class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParams(), config: Config = ConfigFactory.load()) extends Logging {
 
   //  private val clusterName = "neon-search"
   private val dataDirPath = Files.createTempDirectory(s"data-$clusterName-")
   private val dataDir: File = dataDirPath.toFile
+  private val esPluginDir = config.getString("elasticsearch-lib.elasticsearch-plugin-dir")
 
   log.info(s"Logging ESServer for cluster '$clusterName' to '$dataDir'")
+  log.info(s"Setting path.plugins to [$esPluginDir]")
 
   private val settings = {
     val _settings = Settings.settingsBuilder
-      .put("path.home", "/usr/local/elasticsearch-2.0.0/bin")
+      .put("path.home", "/tmp/this-directory-must-not-exist")
       .put("path.data", dataDir.toString)
+      .put("path.plugins", esPluginDir)
+      .put("index.version.created", Version.V_2_2_2_ID.toString)
       .put("cluster.name", clusterName)
       .putArray("path.repo", serverParams.repos: _*)
 
@@ -36,7 +42,7 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
         _settings.put("http.enabled", "false")
     }
 
-    for ((key,value) <- serverParams.extraConfig) {
+    for ((key, value) ← serverParams.extraConfig) {
       if (key.nonEmpty && value.nonEmpty)
         _settings.put(key, value)
     }
@@ -44,11 +50,30 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
     _settings.build()
   }
 
-  private lazy val node = nodeBuilder().local(false).settings(settings).build
-
   def client: Client = node.client
 
   def isClosed = node.isClosed
+
+  private lazy val node = {
+    // http://stackoverflow.com/questions/33975807/elasticsearch-jar-hell-error
+    val originalClassPath = System.getProperty("java.class.path")
+    val classPathEntries = originalClassPath.split(":")
+    val esClasspath = new StringBuilder()
+    log.info(s"Setting up classpath entries for ES embedded")
+    classPathEntries.foreach { entry ⇒
+      if (entry.contains("elasticsearch") || entry.contains("lucene")) {
+        log.info(s"Appending classpath entry $entry")
+        esClasspath.append(entry)
+        esClasspath.append(":")
+      }
+    }
+    System.setProperty("java.class.path", esClasspath.toString)
+
+    val node = nodeBuilder().local(false).settings(settings).node()
+
+    System.setProperty("java.class.path", originalClassPath)
+    node
+  }
 
   def start(): Unit = {
     log.info(s"Starting embedded server node for cluster '$clusterName'")

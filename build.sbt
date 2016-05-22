@@ -1,7 +1,7 @@
 // Project info
 name := "elasticsearch-lib"
 organization := "springnz"
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 releaseVersionBump := sbtrelease.Version.Bump.Bugfix
 
