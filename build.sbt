@@ -17,10 +17,9 @@ resolvers ++= Seq(
 
 // Library versions
 val elasticsearchVersion = "2.2.2"
-val utilLibVersion = "2.9.0"
+val utilLibVersion = "2.11.0"
 
 // Library dependencies
-val utilLib = "springnz" %% "util-lib" % utilLibVersion
 val elasticsearch = "org.elasticsearch" % "elasticsearch" % elasticsearchVersion
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4" % Test
 val commonsIO = "commons-io" % "commons-io" % "2.4"
@@ -28,8 +27,10 @@ val wabiSabi = "wabisabi" %% "wabisabi" % "2.1.4"
 val json4s = "org.json4s" %% "json4s-jackson" % "3.2.10"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3" % Test
 val jts = "com.vividsolutions" % "jts" % "1.13" % Compile
+val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
+val typesafeConfig = "com.typesafe" % "config" % "1.3.0"
 
-libraryDependencies ++= Seq(utilLib, elasticsearch, commonsIO, scalaTest, wabiSabi, json4s, logbackClassic)
+libraryDependencies ++= Seq(typesafeConfig, scalaLogging, elasticsearch, commonsIO, scalaTest, wabiSabi, json4s, logbackClassic)
 
 // Dependency overrides
 val nettyOverride = "io.netty" % "netty" % "3.9.2.Final"

@@ -9,7 +9,7 @@ import org.elasticsearch.Version
 import org.elasticsearch.client.Client
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.node.NodeBuilder._
-import springnz.util.Logging
+import springnz.elasticsearch.utils.Logging
 
 import scala.util.Try
 

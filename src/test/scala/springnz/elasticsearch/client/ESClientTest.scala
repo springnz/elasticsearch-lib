@@ -1,16 +1,16 @@
 package springnz.elasticsearch.client
 
-import java.nio.file.{ Files, Path }
+import java.nio.file.{Files, Path}
 
 import org.apache.commons.io.FileUtils
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse
-import org.elasticsearch.action.search.{ SearchAction, SearchRequestBuilder }
+import org.elasticsearch.action.search.{SearchAction, SearchRequestBuilder}
 import org.elasticsearch.index.query.QueryBuilders
-import org.scalatest.{ ShouldMatchers, fixture }
-import springnz.elasticsearch.server.{ ESServer, ESServerParams }
-import springnz.util.Logging
+import org.scalatest.{ShouldMatchers, fixture}
+import springnz.elasticsearch.server.{ESServer, ESServerParams}
+import springnz.elasticsearch.utils.Logging
 
-import scala.concurrent.{Future, Await}
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 trait ESEmbedded extends fixture.WordSpec with Logging {
