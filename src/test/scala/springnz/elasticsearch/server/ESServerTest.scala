@@ -15,7 +15,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
   val port = 9250
 
   override def withFixture(test: OneArgTest) = {
-    val server = new ESServer("test-cluster", ESServerParams(httpPort = Some(port)))
+    val server = new ESServer(ESServerConfig("test-cluster", httpPort = Some(port)))
 
     try {
       withFixture(test.toNoArgTest(server)) // "loan" the fixture to the test
@@ -30,7 +30,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
 
       val client = new Client(s"http://127.0.0.1:$port")
       val healthFuture: Future[Response] = client.health()
-      val health = Await.result(healthFuture, 10 seconds)
+      val health = Await.result(healthFuture, 10.seconds)
 
       health.getStatusText shouldBe "OK"
 

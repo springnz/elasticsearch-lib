@@ -14,11 +14,17 @@ import springnz.elasticsearch.utils.Logging
 import scala.util.Try
 
 // adapted from https://orrsella.com/2014/10/28/embedded-elasticsearch-server-for-scala-integration-tests/
-case class ESServerParams(httpPort: Option[Int] = Some(9200), repos: Seq[String] = Seq.empty[String], extraConfig: Map[String, String] = Map.empty)
+case class ESServerConfig(
+  clusterName: String,
+  httpPort: Option[Int] = Some(9200),
+  transportPort: Option[Int] = Some(9200),
+  snapshotRepoPath: Option[String] = None,
+  repos: Seq[String] = Seq.empty[String],
+  extraConfig: Map[String, String] = Map.empty)
 
-class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParams(), config: Config = ConfigFactory.load()) extends Logging {
+class ESServer(serverParams: ESServerConfig, config: Config = ConfigFactory.load()) extends Logging {
 
-  //  private val clusterName = "neon-search"
+  private val clusterName = serverParams.clusterName
   private val dataDirPath = Files.createTempDirectory(s"data-$clusterName-")
   private val dataDir: File = dataDirPath.toFile
   private val esPluginDir = config.getString("elasticsearch-lib.elasticsearch-plugin-dir")
@@ -35,12 +41,17 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
       .put("cluster.name", clusterName)
       .putArray("path.repo", serverParams.repos: _*)
 
+    serverParams.snapshotRepoPath.foreach { snapshotRepoPath ⇒
+      _settings.put("path.repo.0", snapshotRepoPath)
+    }
+
     serverParams.httpPort match {
       case Some(port) ⇒
         _settings.put("http.enabled", "true").put("http.port", port)
       case None ⇒
         _settings.put("http.enabled", "false")
     }
+    serverParams.transportPort map (port ⇒ _settings.put("transport.tcp.port", port))
 
     for ((key, value) ← serverParams.extraConfig) {
       if (key.nonEmpty && value.nonEmpty)
@@ -78,7 +89,6 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
   def start(): Unit = {
     log.info(s"Starting embedded server node for cluster '$clusterName'")
     node.start()
-
   }
 
   def stop(): Unit = {

@@ -1,13 +1,13 @@
 package springnz.elasticsearch.client
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 import org.apache.commons.io.FileUtils
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse
-import org.elasticsearch.action.search.{SearchAction, SearchRequestBuilder}
+import org.elasticsearch.action.search.{ SearchAction, SearchRequestBuilder }
 import org.elasticsearch.index.query.QueryBuilders
-import org.scalatest.{ShouldMatchers, fixture}
-import springnz.elasticsearch.server.{ESServer, ESServerParams}
+import org.scalatest.{ ShouldMatchers, fixture }
+import springnz.elasticsearch.server.{ ESServer, ESServerConfig }
 import springnz.elasticsearch.utils.Logging
 
 import scala.concurrent.Await
@@ -25,12 +25,12 @@ trait ESEmbedded extends fixture.WordSpec with Logging {
   // TODO: create a working example of Snapshotting an index
   val snapshotDirPath: Path = Files.createTempDirectory(s"snapshot-")
 
-  val serverParams = ESServerParams(esHttpPort, Seq(snapshotDirPath.toString), extraConfig)
+  val serverConfig = ESServerConfig(clusterName, esHttpPort, None, Some(snapshotDirPath.toString), Seq.empty, extraConfig)
 
   def newClient() = ESClient.transport(ESClientURI("localhost", esBinaryPort), clusterName)
 
   override def withFixture(test: OneArgTest) = {
-    val server = new ESServer(clusterName, serverParams)
+    val server = new ESServer(serverConfig)
     try {
       server.start()
       withFixture(test.toNoArgTest(server)) // "loan" the fixture to the test
