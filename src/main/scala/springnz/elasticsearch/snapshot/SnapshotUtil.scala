@@ -149,7 +149,7 @@ class SnapshotUtil(port: Int, timeout: FiniteDuration = 1.minute) extends Loggin
       addRepo(repoSourcePath, repoName)
       val snapshotList = getSnapshotList(repoName)
       val result = snapshotList.map(restoreSnapshot(repoName, _))
-      Thread.sleep(1000) // TODO: check status and continue when ready
+      Thread.sleep(5000) // TODO: check status and continue when ready
       result
     }.withErrorLog(s"Error restoring repo $repoSourcePath/$repoName")
 
