@@ -76,7 +76,7 @@ class SnapshotUtil(port: Int, timeout: FiniteDuration = 1.minute) extends Loggin
     if (registerSnapshotResult.response.getStatusCode == 200 && createSnapshotResult.response.getStatusCode == 200) {
       Success(createSnapshotResult)
     } else {
-      Failure(new RuntimeException(s"Error creating snapshot. Response from server: ${registerSnapshotResult.response}"))
+      Failure(new RuntimeException(s"Error creating snapshot. Response: ${registerSnapshotResult.response.getResponseBody}"))
     }.withErrorLog("Error creating snapshot")
   }
 
