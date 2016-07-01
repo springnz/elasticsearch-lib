@@ -72,7 +72,7 @@ class ESServer(serverParams: ESServerConfig, config: Config = ConfigFactory.load
     val esClasspath = new StringBuilder()
     log.info(s"Setting up classpath entries for ES embedded")
     classPathEntries.foreach { entry ⇒
-      if (entry.contains("elasticsearch") || entry.contains("lucene")) {
+      if (!entry.contains("elasticsearch-lib") && (entry.contains("elasticsearch") || entry.contains("lucene"))) {
         log.info(s"Appending classpath entry $entry")
         esClasspath.append(entry)
         esClasspath.append(":")
