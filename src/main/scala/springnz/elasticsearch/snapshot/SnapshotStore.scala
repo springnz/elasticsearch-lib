@@ -7,7 +7,7 @@ import dispatch.url
 import org.apache.commons.io.FileUtils
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import springnz.elasticsearch.snapshot.SnapshotUtil.SnapShot
+import springnz.elasticsearch.snapshot.SnapshotStore.SnapShot
 import springnz.elasticsearch.utils.TryExtensions._
 import springnz.elasticsearch.utils.{ HttpUtils, Logging, Zip4jUtil }
 
@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ Await, ExecutionContext }
 import scala.util.{ Failure, Success, Try }
 
-class SnapshotUtil(port: Int, timeout: FiniteDuration = 1.minute) extends Logging {
+class SnapshotStore(port: Int, timeout: FiniteDuration = 1.minute) extends Logging {
   import HttpUtils._
 
   private val serverUrl = url(s"http://localhost:$port")
@@ -163,7 +163,7 @@ class SnapshotUtil(port: Int, timeout: FiniteDuration = 1.minute) extends Loggin
   }
 }
 
-object SnapshotUtil {
+object SnapshotStore {
   case class SnapShot(snapshot: String) extends AnyVal
   def getSharedRepoPath: File = FileUtils.getTempDirectory.getPath / "es_repos_shared"
   def createTmpRepoPath: File = Files.createTempDirectory("es_repos_unzipped")
