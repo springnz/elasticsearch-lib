@@ -1,45 +1,13 @@
 package springnz.elasticsearch.client
 
-import java.nio.file.{ Files, Path }
-
-import org.apache.commons.io.FileUtils
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse
 import org.elasticsearch.action.search.{ SearchAction, SearchRequestBuilder }
 import org.elasticsearch.index.query.QueryBuilders
-import org.scalatest.{ ShouldMatchers, fixture }
-import springnz.elasticsearch.server.{ ESServer, ESServerConfig }
-import springnz.elasticsearch.utils.Logging
+import org.scalatest.ShouldMatchers
+import springnz.elasticsearch.ESEmbedded
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-trait ESEmbedded extends fixture.WordSpec with Logging {
-
-  override type FixtureParam = ESServer
-
-  val esBinaryPort = 9300
-  val esHttpPort = None
-  val clusterName = "elasticsearch"
-  val extraConfig: Map[String, String] = Map.empty
-
-  // TODO: create a working example of Snapshotting an index
-  val snapshotDirPath: Path = Files.createTempDirectory(s"snapshot-")
-
-  val serverConfig = ESServerConfig(clusterName, esHttpPort, None, Some(snapshotDirPath.toString), Seq.empty, extraConfig)
-
-  def newClient() = ESClient.transport(ESClientURI("localhost", esBinaryPort), clusterName)
-
-  override def withFixture(test: OneArgTest) = {
-    val server = new ESServer(serverConfig)
-    try {
-      server.start()
-      withFixture(test.toNoArgTest(server)) // "loan" the fixture to the test
-    } finally {
-      FileUtils.deleteDirectory(snapshotDirPath.toFile)
-      server.stop()
-    }
-  }
-}
 
 class ESClientTest extends ESEmbedded with ShouldMatchers {
 

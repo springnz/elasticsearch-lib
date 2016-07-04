@@ -44,7 +44,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
       val client = new Client(s"http://127.0.0.1:$port")
       val indexFuture: Future[Response] = client.createIndex("testindex")
 
-      val index = Await.result(indexFuture, 10 seconds)
+      val index = Await.result(indexFuture, 10.seconds)
       index.getResponseBody shouldBe """{"acknowledged":true}"""
     }
 
@@ -55,7 +55,7 @@ class ESServerTest extends fixture.WordSpec with ShouldMatchers {
 
       import scala.concurrent.ExecutionContext.Implicits.global
       val responseFuture = request.processHttpRequest(waitForComplete = true)
-      val response = Await.result(responseFuture, 10 seconds)
+      val response = Await.result(responseFuture, 10.seconds)
       response.json should include("You Know, for Search")
     }
   }
