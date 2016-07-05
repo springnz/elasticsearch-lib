@@ -1,8 +1,8 @@
 package springnz.elasticsearch.server
 
-import java.io.File
 import java.nio.file.Files
 
+import better.files._
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.apache.commons.io.FileUtils
 import org.elasticsearch.Version
@@ -13,17 +13,36 @@ import springnz.elasticsearch.utils.Logging
 
 import scala.util.Try
 
-// adapted from https://orrsella.com/2014/10/28/embedded-elasticsearch-server-for-scala-integration-tests/
-case class ESServerParams(httpPort: Option[Int] = Some(9200), repos: Seq[String] = Seq.empty[String], extraConfig: Map[String, String] = Map.empty)
+case class ESServerConfig(
+    clusterName: String,
+    transportPort: Int = 9300,
+    httpPort: Option[Int] = Some(9200),
+    dataWriteDir: Option[String] = None,
+    snapshotRepoDir: Option[String] = None,
+    snapshotRepoNames: Seq[String] = Seq.empty[String],
+    extraConfig: Map[String, String] = Map.empty) {
 
-class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParams(), config: Config = ConfigFactory.load()) extends Logging {
+  def withTransportPort(port: Int) = this.copy(transportPort = port)
+  def withHttpPort(port: Int) = this.copy(httpPort = Some(port))
+  def withDataWriteDir(dir: String) = this.copy(dataWriteDir = Some(dir))
+  def withSnapshotRepoDir(dir: String) = this.copy(snapshotRepoDir = Some(dir))
+  def withSnapshotRepoNames(repoNames: Seq[String]) = this.copy(snapshotRepoNames = repoNames)
+  def withExtraConfig(extraConfig: Map[String, String]) = this.copy(extraConfig = extraConfig)
+}
 
-  //  private val clusterName = "neon-search"
-  private val dataDirPath = Files.createTempDirectory(s"data-$clusterName-")
-  private val dataDir: File = dataDirPath.toFile
+object ESServerConfig {
+  def apply(clusterName: String) = new ESServerConfig(clusterName)
+}
+
+class ESServer(serverConfig: ESServerConfig, config: Config = ConfigFactory.load()) extends Logging {
+
+  private val dataDir = serverConfig.dataWriteDir.getOrElse {
+    Files.createTempDirectory(s"data-${serverConfig.clusterName}-").toFile.toString
+  }
+
   private val esPluginDir = config.getString("elasticsearch-lib.elasticsearch-plugin-dir")
 
-  log.info(s"Logging ESServer for cluster '$clusterName' to '$dataDir'")
+  log.info(s"Logging ESServer for cluster '${serverConfig.clusterName}' to '$dataDir'")
   log.info(s"Setting path.plugins to [$esPluginDir]")
 
   private val settings = {
@@ -32,21 +51,22 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
       .put("path.data", dataDir.toString)
       .put("path.plugins", esPluginDir)
       .put("index.version.created", Version.V_2_2_2_ID.toString)
-      .put("cluster.name", clusterName)
-      .putArray("path.repo", serverParams.repos: _*)
-
-    serverParams.httpPort match {
+      .put("cluster.name", serverConfig.clusterName)
+      .put("transport.tcp.port", serverConfig.transportPort)
+      .putArray("path.repo", serverConfig.snapshotRepoNames: _*)
+    serverConfig.snapshotRepoDir.foreach { snapshotRepoPath ⇒
+      _settings.put("path.repo.0", snapshotRepoPath)
+    }
+    serverConfig.httpPort match {
       case Some(port) ⇒
         _settings.put("http.enabled", "true").put("http.port", port)
       case None ⇒
         _settings.put("http.enabled", "false")
     }
-
-    for ((key, value) ← serverParams.extraConfig) {
+    for ((key, value) ← serverConfig.extraConfig) {
       if (key.nonEmpty && value.nonEmpty)
         _settings.put(key, value)
     }
-
     _settings.build()
   }
 
@@ -61,7 +81,7 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
     val esClasspath = new StringBuilder()
     log.info(s"Setting up classpath entries for ES embedded")
     classPathEntries.foreach { entry ⇒
-      if (entry.contains("elasticsearch") || entry.contains("lucene")) {
+      if (!entry.contains("elasticsearch-lib") && (entry.contains("elasticsearch") || entry.contains("lucene"))) {
         log.info(s"Appending classpath entry $entry")
         esClasspath.append(entry)
         esClasspath.append(":")
@@ -76,17 +96,16 @@ class ESServer(clusterName: String, serverParams: ESServerParams = ESServerParam
   }
 
   def start(): Unit = {
-    log.info(s"Starting embedded server node for cluster '$clusterName'")
+    log.info(s"Starting embedded server node for cluster '${serverConfig.clusterName}'")
     node.start()
-
   }
 
   def stop(): Unit = {
-    log.info(s"Stopping embedded server node for cluster '$clusterName'")
+    log.info(s"Stopping embedded server node for cluster '${serverConfig.clusterName}'")
     node.close()
     Try {
-      log.info(s"Deleting folder '$dataDir'")
-      FileUtils.forceDelete(dataDir)
+      log.info(s"Deleting directory '$dataDir'")
+      FileUtils.forceDelete(dataDir.toFile.toJava)
     }
   }
 }

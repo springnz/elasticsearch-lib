@@ -29,8 +29,11 @@ val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3" % Test
 val jts = "com.vividsolutions" % "jts" % "1.13" % Compile
 val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
 val typesafeConfig = "com.typesafe" % "config" % "1.3.0"
+val zip4j = "net.lingala.zip4j" % "zip4j" % "1.3.2"
+val dispatch = "net.databinder.dispatch" %% "dispatch-core" % "0.11.2" % Test
+val betterFiles = "com.github.pathikrit" %% "better-files" % "2.14.0"
 
-libraryDependencies ++= Seq(typesafeConfig, scalaLogging, elasticsearch, commonsIO, scalaTest, wabiSabi, json4s, logbackClassic)
+libraryDependencies ++= Seq(typesafeConfig, scalaLogging, elasticsearch, commonsIO, scalaTest, wabiSabi, json4s, logbackClassic, zip4j, dispatch, betterFiles)
 
 // Dependency overrides
 val nettyOverride = "io.netty" % "netty" % "3.9.2.Final"
