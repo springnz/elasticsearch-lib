@@ -16,8 +16,7 @@ resolvers ++= Seq(
 )
 
 // Library versions
-val elasticsearchVersion = "2.2.2"
-val utilLibVersion = "2.11.0"
+val elasticsearchVersion = "2.3.4"
 
 // Library dependencies
 val elasticsearch = "org.elasticsearch" % "elasticsearch" % elasticsearchVersion
@@ -26,7 +25,6 @@ val commonsIO = "commons-io" % "commons-io" % "2.4"
 val wabiSabi = "wabisabi" %% "wabisabi" % "2.1.4"
 val json4s = "org.json4s" %% "json4s-jackson" % "3.2.10"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3" % Test
-val jts = "com.vividsolutions" % "jts" % "1.13" % Compile
 val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
 val typesafeConfig = "com.typesafe" % "config" % "1.3.0"
 val zip4j = "net.lingala.zip4j" % "zip4j" % "1.3.2"
@@ -43,7 +41,7 @@ dependencyOverrides := dependencyOverridesSet
 // Test options
 parallelExecution in Test := false
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oD")
-testOptions in Test += Tests.Setup( () => System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn"))
+testOptions in Test += Tests.Setup(() => System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn"))
 
 // Publish options
 publishTo <<= version { (v: String) ⇒
