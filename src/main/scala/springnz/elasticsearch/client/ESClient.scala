@@ -1,11 +1,10 @@
 package springnz.elasticsearch.client
 
 import java.net.InetSocketAddress
-import java.util
 
 import com.typesafe.scalalogging.Logger
 import org.elasticsearch.action.ActionFuture
-import org.elasticsearch.action.admin.indices.alias.get.{GetAliasesResponse, GetAliasesRequest}
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest
 import org.elasticsearch.action.admin.indices.close.{ CloseIndexRequest, CloseIndexResponse }
 import org.elasticsearch.action.admin.indices.create.{ CreateIndexAction, CreateIndexRequestBuilder, CreateIndexResponse }
 import org.elasticsearch.action.admin.indices.delete.{ DeleteIndexAction, DeleteIndexRequestBuilder, DeleteIndexResponse }
@@ -13,7 +12,7 @@ import org.elasticsearch.action.admin.indices.mapping.get.{ GetMappingsAction, G
 import org.elasticsearch.action.admin.indices.mapping.put.{ PutMappingAction, PutMappingRequestBuilder, PutMappingResponse }
 import org.elasticsearch.action.admin.indices.open.{ OpenIndexRequest, OpenIndexResponse }
 import org.elasticsearch.action.admin.indices.settings.put.{ UpdateSettingsAction, UpdateSettingsRequestBuilder, UpdateSettingsResponse }
-import org.elasticsearch.action.admin.indices.stats.{IndexStats, IndicesStatsResponse, IndicesStatsRequest}
+import org.elasticsearch.action.admin.indices.stats.{ IndicesStatsRequest, IndicesStatsResponse }
 import org.elasticsearch.action.index.{ IndexAction, IndexRequestBuilder, IndexResponse }
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
@@ -26,7 +25,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
-object ClientPimper {
+object ClientExt {
 
   implicit class ClientOps(javaClient: Client) {
 
@@ -69,7 +68,7 @@ object ClientPimper {
     def putMapping(indexName: String, typeName: String, source: String)(implicit log: Logger): Future[PutMappingResponse] =
       executeAndWaitForYellow(client ⇒ ESClient.putMapping(client, indexName, typeName, source))
 
-    def getMapping(indexName: String, typeName: String)(implicit log: Logger): Future[GetMappingsResponse] =
+    def getMapping(indexName: String, typeName: String)(implicit log: Logger): Future[String] =
       ESClient.getMapping(javaClient, indexName, typeName)
 
     def waitForYellowHealthStatus()(implicit log: Logger): Future[Boolean] =
@@ -79,7 +78,7 @@ object ClientPimper {
 
 object ESClient {
 
-  import ClientPimper._
+  import ClientExt._
 
   /**
     * Creates an ElasticClient connected to the elasticsearch instance(s) specified by the uri.
@@ -139,13 +138,13 @@ object ESClient {
   }
 
   def createIndex(client: Client, indexName: String)(implicit log: Logger): Future[CreateIndexResponse] = {
-    log.info(s"Creating index [$indexName]")
+    log.info(s"Creating index: $indexName")
     val request = new CreateIndexRequestBuilder(client, CreateIndexAction.INSTANCE).setIndex(indexName).request()
     client.executeRequest(request)
   }
 
   def closeIndex(client: Client, indexName: String)(implicit log: Logger): Future[CloseIndexResponse] = {
-    log.info(s"Closing index [$indexName]")
+    log.info(s"Closing index: $indexName")
     val javaFuture = client.admin().indices().close(new CloseIndexRequest(indexName))
     Future {
       javaFuture.get()
@@ -153,7 +152,7 @@ object ESClient {
   }
 
   def openIndex(client: Client, indexName: String)(implicit log: Logger): Future[OpenIndexResponse] = {
-    log.info(s"Opening index [$indexName]")
+    log.info(s"Opening index: $indexName")
     val javaFuture = client.admin().indices().open(new OpenIndexRequest(indexName))
     Future {
       javaFuture.get()
@@ -161,14 +160,13 @@ object ESClient {
   }
 
   def deleteIndex(client: Client, indexName: String)(implicit log: Logger): Future[DeleteIndexResponse] = {
-    log.info(s"Deleting index [$indexName]")
+    log.info(s"Deleting index: $indexName")
     val request = new DeleteIndexRequestBuilder(client, DeleteIndexAction.INSTANCE).request().indices(indexName)
     val javaFuture = client.admin().indices().delete(request)
     Future {
       javaFuture.get()
     }
   }
-
 
   // unused / untested
   def getAliases(client: Client)(implicit log: Logger): Future[List[(String, List[String])]] = {
@@ -194,7 +192,7 @@ object ESClient {
   }
 
   def updateSettings(client: Client, indexName: String, source: String)(implicit log: Logger): Future[UpdateSettingsResponse] = {
-    log.info(s"Updating settings for index [$indexName]")
+    log.info(s"Updating settings for index: $indexName")
     val request = new UpdateSettingsRequestBuilder(client, UpdateSettingsAction.INSTANCE)
       .setIndices(indexName)
       .setSettings(source)
@@ -203,7 +201,7 @@ object ESClient {
   }
 
   def insert(client: Client, indexName: String, typeName: String, source: String)(implicit log: Logger): Future[IndexResponse] = {
-    log.info(s"Inserting document to index [$indexName]")
+    log.info(s"Inserting document to index: $indexName type: $typeName")
     val request = new IndexRequestBuilder(client, IndexAction.INSTANCE)
       .setIndex(indexName).setType(typeName).setSource(source)
       .request()
@@ -211,19 +209,21 @@ object ESClient {
   }
 
   def putMapping(client: Client, indexName: String, typeName: String, source: String)(implicit log: Logger): Future[PutMappingResponse] = {
-    log.info(s"Defining mapping for index [$indexName]")
+    log.info(s"Defining mapping for index: $indexName type: $typeName")
     val request = new PutMappingRequestBuilder(client, PutMappingAction.INSTANCE)
       .setIndices(indexName).setType(typeName).setSource(source)
       .request()
     client.executeRequest(request)
   }
 
-  def getMapping(client: Client, indexName: String, typeName: String)(implicit log: Logger): Future[GetMappingsResponse] = {
-    log.info(s"Getting mapping for index [$indexName]")
+  def getMapping(client: Client, indexName: String, typeName: String)(implicit log: Logger): Future[String] = {
+    log.info(s"Getting mapping for index: $indexName type: $typeName")
     val request = new GetMappingsRequestBuilder(client, GetMappingsAction.INSTANCE)
       .setIndices(indexName).setTypes(typeName)
       .request()
-    client.executeRequest(request)
+    client.executeRequest(request).map { response ⇒
+      response.getMappings.get(indexName).get(typeName).source.toString
+    }
   }
 
   def waitForNonRedHealthStatus(client: Client)(implicit log: Logger): Future[Boolean] = {
