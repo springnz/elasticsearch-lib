@@ -7,4 +7,4 @@ notifications:
       - stephenzoio@yahoo.com
 jdk:
   - oraclejdk8
-script: sbt pack test
+script: sbt test
