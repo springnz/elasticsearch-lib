@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 
 class ESClientTest extends ESEmbedded with ShouldMatchers {
 
-  import ClientPimper._
+  import ClientExt._
 
   val timeout = 5.seconds
 
@@ -84,9 +84,8 @@ class ESClientTest extends ESEmbedded with ShouldMatchers {
       val putMappingFuture = Await.ready(client.putMapping(indexName, typeName, source), timeout)
       putMappingFuture.value.get.isSuccess shouldBe true
 
-      val mappingsResponse = Await.result(client.getMapping(indexName, typeName), timeout)
-      val mapping = mappingsResponse.getMappings.get(indexName).get(typeName).source()
-      mapping.toString shouldBe source
+      val mapping = Await.result(client.getMapping(indexName, typeName), timeout)
+      mapping shouldBe source
     }
 
     "check presence of index" in { server ⇒

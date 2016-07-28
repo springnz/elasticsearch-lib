@@ -7,7 +7,7 @@ import org.elasticsearch.action.search.{ SearchAction, SearchRequestBuilder }
 import org.elasticsearch.index.query.QueryBuilders
 import org.scalatest.{ BeforeAndAfterAll, ShouldMatchers }
 import springnz.elasticsearch.ESEmbedded
-import springnz.elasticsearch.client.ClientPimper
+import springnz.elasticsearch.client.ClientExt
 import springnz.elasticsearch.server.ESServerConfig
 
 import scala.concurrent.Await
@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class SnapshotStoreTests extends ESEmbedded with ShouldMatchers with BeforeAndAfterAll {
-  import ClientPimper._
+  import ClientExt._
 
   val timeout = 5.seconds
   val snapshotRepoDir = Files.createTempDirectory("snapshot-test-")
